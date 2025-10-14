@@ -8,9 +8,6 @@ class DetectionConfig:
     valid_classes: List[int]
     nms_threshold: float = 0.4
 
-
-
-
 @dataclass
 class DisplayConfig:
     window_name: str = "Window"
