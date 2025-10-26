@@ -14,7 +14,7 @@ class VideoProcessor:
         self.preprocess_times = []
         self.postprocess_times = []
 
-    # Removed save_annotated_frame and all image saving logic
+
 
     def draw_bbox(self, frame, bbox, cls, track_id, conf):
         x1, y1, width, height = bbox
@@ -74,7 +74,6 @@ class VideoProcessor:
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
 
-    # Removed process_image and all image saving logic
 
     def process_video(self):
         cap = cv2.VideoCapture(self.video_path)
@@ -99,7 +98,7 @@ class VideoProcessor:
                 preprocess_start = time.time()
                 preprocess_end = time.time()
 
-                # Deteksi
+                # Detection
                 boxes, confidences, classes = self.detection_model.process_frame(frame)
                 indices = self.detection_model.apply_nms(boxes, confidences)
                 detections = [(boxes[i], confidences[i], classes[i]) for i in indices]
@@ -115,7 +114,7 @@ class VideoProcessor:
 
                 self.preprocess_times.append(preprocess_end - preprocess_start)
 
-                # Tampilkan FPS
+                # Display FPS
                 time_diff = time.time() - start_time
                 fps = 1.0 / time_diff if time_diff > 0.001 else 0.0
                 start_time = time.time()
