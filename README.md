@@ -1,7 +1,7 @@
 # accident-analyser
 
 ## Project Overview
-This project detects vehicle accidents and classifies damage severity using deep learning models (YOLO for detection, EfficientNetB0 for classification). It processes video or image data and outputs accident status and damage class.
+This project detects vehicle accidents and classifies damage severity using deep learning models (YOLO for detection, detection_model for classification). It processes video or image data and outputs accident status and damage class.
 
 ## Setup Instructions
 

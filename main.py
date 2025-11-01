@@ -5,8 +5,8 @@ from src.Processors import *
 
 def main():
     classifier_config = ClassifierConfig(
-        model_type="EfficientNetB0",
-        classifier_path="models/cnn/EfficientNetB0.h5"
+        model_type="detection_model",
+        classifier_path="models/cnn/detection_model.h5"
     )
 
     detection_config = DetectionConfig(

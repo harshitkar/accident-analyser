@@ -13,7 +13,7 @@ DATA_DIR = 'assets/dataset'
 TRAIN_DIR = os.path.join(DATA_DIR, 'train')
 VALID_DIR = os.path.join(DATA_DIR, 'valid')
 TEST_DIR = os.path.join(DATA_DIR, 'test')
-MODEL_SAVE = 'models/cnn/EfficientNetB0.h5'
+MODEL_SAVE = 'models/cnn/detection_model.h5'
 
 IMG_SIZE = (224, 224)
 BATCH = 32
@@ -35,17 +35,12 @@ def build_model(input_shape=(224, 224, 3), num_classes=None):
 
     x_in = Input(shape=input_shape)
 
-    # Stem: wide conv 
-    x = Conv2D(64, 3, strides=2, padding='same')(x_in)
-    x = BatchNormalization()(x) # Stabilizes layer outputs.
-    x = Activation('swish')(x) # Swish activation function: for better performance than ReLU (used in residual nets).
-
-    # Branch A: Separable convolution to extract spatial features efficiently
-    a = SeparableConv2D(96, 3, padding='same')(x)
+    # Separable convolution to extract spatial features efficiently
+    a = Conv2D(96, 3, padding='same')(x_in)
     a = BatchNormalization()(a)
     a = Activation('swish')(a)
 
-    # Branch B: Depthwise + Pointwise convolution for efficient channel-wise feature extraction
+    # Depthwise + Pointwise convolution for efficient channel-wise feature extraction
     b = DepthwiseConv2D(3, padding='same')(x) # Applies a 3x3 filter to each input channel separately.
     b = Conv2D(96, 1, padding='same')(b) # Pointwise 1x1 convolution to combine channel information.
     b = BatchNormalization()(b)
@@ -94,13 +89,13 @@ def build_model(input_shape=(224, 224, 3), num_classes=None):
 
 def main():
     model = build_model()
-    model.compile(optimizer=Adam(1e-3), loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=Adam(1e-3), metrics=['accuracy'])
 
     # Train
     model.fit(train_gen, epochs=EPOCHS, validation_data=valid_gen)
 
     # Fine-tune
-    model.compile(optimizer=Adam(1e-4), loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=Adam(1e-4), metrics=['accuracy'])
     model.fit(train_gen, epochs=5, validation_data=valid_gen)
 
     # Evaluate and save

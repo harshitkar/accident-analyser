@@ -23,5 +23,5 @@ class DetectCondition:
 
 @dataclass
 class ClassifierConfig:
-    model_type: str = 'EfficientNetB0'  
-    classifier_path: str = 'models/cnn/EfficientNetB0.h5'
+    model_type: str = 'detection_model'  
+    classifier_path: str = 'models/cnn/detection_model.h5'

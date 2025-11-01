@@ -15,16 +15,10 @@ class VehicleDetection:
         self.image_size = (224, 224)
 
     def classify_damage(self, image):
-        if self.classifier_config.model_type == 'MobileNetV2':
-            self.image_size = (224, 224)
-            image_resized = cv2.resize(image, self.image_size)  
-            image_array = np.expand_dims(image_resized, axis=0)  
-            image_array = image_array.astype('float32') / 255.0  
-        elif self.classifier_config.model_type in ['EfficientNetB0', 'EfficientNetB3']:
-            self.image_size = (224, 224)
-            image_resized = cv2.resize(image, self.image_size)  
-            image_array = np.expand_dims(image_resized, axis=0)  
-            image_array = image_array.astype('float32')  
+        self.image_size = (224, 224)
+        image_resized = cv2.resize(image, self.image_size)  
+        image_array = np.expand_dims(image_resized, axis=0)  
+        image_array = image_array.astype('float32') / 255.0
 
         # Predict the damage class
         prediction = self.classifier.predict(image_array)[0]  
