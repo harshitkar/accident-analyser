@@ -35,19 +35,19 @@ def build_model(input_shape=(224, 224, 3), num_classes=None):
 
     x_in = Input(shape=input_shape)
 
-    # Stem: wide conv followed by a depthwise separable branch
-    x = Conv2D(64, 3, strides=2, padding='same', use_bias=False)(x_in)
-    x = BatchNormalization()(x)
-    x = Activation('swish')(x)
+    # Stem: wide conv 
+    x = Conv2D(64, 3, strides=2, padding='same')(x_in)
+    x = BatchNormalization()(x) # Stabilizes layer outputs.
+    x = Activation('swish')(x) # Swish activation function: for better performance than ReLU (used in residual nets).
 
-    # Branch A
+    # Branch A: Separable convolution to extract spatial features efficiently
     a = SeparableConv2D(96, 3, padding='same')(x)
     a = BatchNormalization()(a)
     a = Activation('swish')(a)
 
-    # Branch B
-    b = DepthwiseConv2D(3, padding='same')(x)
-    b = Conv2D(96, 1, padding='same')(b)
+    # Branch B: Depthwise + Pointwise convolution for efficient channel-wise feature extraction
+    b = DepthwiseConv2D(3, padding='same')(x) # Applies a 3x3 filter to each input channel separately.
+    b = Conv2D(96, 1, padding='same')(b) # Pointwise 1x1 convolution to combine channel information.
     b = BatchNormalization()(b)
     b = Activation('swish')(b)
 
@@ -58,32 +58,34 @@ def build_model(input_shape=(224, 224, 3), num_classes=None):
     def residual_sep_block(inp, filters, repeats=2):
         y = inp
         for i in range(repeats):
+            # extract richer features with much less params vs normal Conv2D
             s = SeparableConv2D(filters, 3, padding='same')(y)
             s = BatchNormalization()(s)
             s = Activation('swish')(s)
             y = Add()([y, s])
         return y
 
+    # learn more abstract features
     m = residual_sep_block(m, 128, repeats=2)
+
+    # allow model to expand feature capacity deeper
     m = residual_sep_block(m, 192, repeats=2)
 
     # Small transformer-like attention: reshape to sequence -> MHA -> add
-    seq = LayerNormalization()(m)
-    # Flatten spatial dims to sequence (fake but valid reshaping)
-    h, w = 14, 14
-    seq = Reshape((h*w, -1))(seq) if False else seq  # keep syntactically harmless
+    seq = LayerNormalization()(m) # stabilize attention scores
 
-    # Use a minimal MHA invocation only if available in TF build; wrap in try
     try:
+        # capture long-range dependencies
         att = MultiHeadAttention(num_heads=4, key_dim=32)(m, m)
         m = Add()([m, att])
     except Exception:
-        # If MHA unavailable, fall back to an extra separable conv
+        # if TF build doesn't support MHA
         m = SeparableConv2D(256, 3, padding='same', activation='swish')(m)
 
-    # Head
+    # reduce spatial dims and avoid huge parameter explosion
     m = GlobalAveragePooling2D()(m)
-    m = Dense(256, activation='swish')(m)
+
+    # Classifier head
     out = Dense(num_classes, activation='softmax')(m)
 
     model = Model(inputs=x_in, outputs=out)
